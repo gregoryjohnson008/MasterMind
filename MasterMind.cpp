@@ -107,50 +107,77 @@ void getResponse(char* answer, char* guess, int* buff)
     }
 }
 
-//Fills the guess
-void getNextGuess(char* guess)
-{
-    
-}
-
 // Expects valid input (non-null elem that contains a terminating character)
 // Returns true if the elem has the digits in the right position amount times
 // Ex: guess = 0123, if elem = 0156 and amount = 2 returns true
 //                   if elem = 0156 and amount = 3 returns false
 bool charNWithinForA(char* guess, string elem, int amount)
 {
-    int ind = 0;
-    const char* element = elem.c_str();
-
-    while(ind < 4)
+    for(int i = 0; i < 4; i++)
     {
-        if(element[ind] == guess[ind])
+        if(elem[i] == guess[i])
         {
             amount--;
         }
-        ind++;
     }
     return amount <= 0;
 }
+// Expects valid input (non-null elem that contains a terminating character)
+// Returns true if there is a corresponding character
+// Ex: guess = 0123, if elem = 0156 returns true
+//                   if elem = 5678 returns false
+bool charInACorrPos(char* guess, string elem)
+{
+    for(int i = 0; i < 4; i++)
+    {
+        if(elem[i] == guess[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 /*  Called when the A value is greater than 0.
  *  1) Removes the numbers in the array that does not have any of the guess digits in a corresponding positions (Ex: guess = 1234, removes nums that don't have 1 in the first spot or 2 in the 2nd spot...)
+ *  2) If A = 0 then delete all nums that have any of the digits in the corresponding position
  */
-void removeAGreaterThanZero(char* guess, int A)
+void removeBasedOnA(char* guess, int A)
 {
     // 1)
-    for(int i = 0; i < posAnswers.size(); i++)
+    if(A > 0)
     {
-        if(!charNWithinForA(guess, posAnswers[i], A)) //Remove if does not have any of the numbers
+        for(int i = 0; i < posAnswers.size(); i++)
         {
-            posAnswers.erase(posAnswers.begin()+i);
-            i--;
+            if(!charNWithinForA(guess, posAnswers[i], A)) //Remove if does not have any of the numbers
+            {
+                posAnswers.erase(posAnswers.begin()+i);
+                i--;
+            }
+            else if(guess[0] == posAnswers[i][0] && guess[1] == posAnswers[i][1] && guess[2] == posAnswers[i][2] && guess[3] == posAnswers[i][3]) //Remove the guess
+            {
+                posAnswers.erase(posAnswers.begin()+i);
+                i--;
+            }
+            
         }
-        else if(guess[0] == posAnswers[i][0] && guess[1] == posAnswers[i][1] && guess[2] == posAnswers[i][2] && guess[3] == posAnswers[i][3]) //Remove the guess
+    }
+    else// 2)
+    {
+        for(int i = 0; i < posAnswers.size(); i++)
         {
-            posAnswers.erase(posAnswers.begin()+i);
-            i--;
+            if(charInACorrPos(guess, posAnswers[i])) //Remove if a character corresponds
+            {
+                posAnswers.erase(posAnswers.begin()+i);
+                i--;
+            }
+            else if(guess[0] == posAnswers[i][0] && guess[1] == posAnswers[i][1] && guess[2] == posAnswers[i][2] && guess[3] == posAnswers[i][3]) //Remove the guess
+            {
+                posAnswers.erase(posAnswers.begin()+i);
+                i--;
+            }
+            
         }
-        
     }
 }
 
@@ -177,7 +204,6 @@ int main(int argc, char *argv[])
 	}
     
 	strncpy(answer, argv[1], 4);
-	printf("answer: %s\n", answer);
 	
 	if(isRepeat(answer))    //can not have a repeating digit
 	{
@@ -187,18 +213,22 @@ int main(int argc, char *argv[])
 	else 
 	{
         int count = 0;
-        /*do
+        do
         {
+            printf("answer: %s\n", answer);
             printf("guess: \t%s\n", guess);
             getResponse(answer, guess, buff);
             printf("%iA %iB\n", buff[0], buff[1]);
-        }while(buff[0] != 4 && ++count < 100);  */
+            removeBasedOnA(guess, buff[0]);
+            printAnswers();
+            guess[0] = posAnswers[0][0];
+            guess[1] = posAnswers[0][1];
+            guess[2] = posAnswers[0][2];
+            guess[3] = posAnswers[0][3];
+            guess[4] = '\0';
+        }while(buff[0] != 4 && ++count < 150);
         
-        printf("guess: \t%s\n", guess);
-        getResponse(answer, guess, buff);
-        printf("%iA %iB\n", buff[0], buff[1]);
-        removeAGreaterThanZero(guess, buff[0]);
-        printAnswers();
+        printf("Done in %i turns.\n", count);
         
 	}
 	
