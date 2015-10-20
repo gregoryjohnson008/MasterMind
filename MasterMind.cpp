@@ -209,7 +209,7 @@ void removeBasedOnResponse(char* guess, int A, int B)
             
         }
     }
-    printf("Removed: %i\n", removed);
+    //printf("Removed: %i\n", removed);
 }
 
 //Randomly retrieves next guess
@@ -251,23 +251,24 @@ int main(int argc, char *argv[])
 	}
 	else 
 	{
-        int count = 0;
+        int count = 1;
         do
         {
             //***********Gets new guess***********
             getNewGuess(guess);
+            printf("Turn %i:\n", count);
             printf("answer: %s\n", answer);
             printf("guess: \t%s\n", guess);
             
             //***********Gets response***********
             getResponse(answer, guess, buff);
-            printf("%iA %iB\n", buff[0], buff[1]);
-            
+            printf("%iA %iB\n\n", buff[0], buff[1]);
+            if(buff[0] == 4) {break;}
             //***********Removes from possible answers***********
             removeBasedOnResponse(guess, buff[0], buff[1]);
-            printAnswers();
+            //printAnswers();
         }
-        while(buff[0] != 4 && ++count < 150);
+        while(count++ < 150);
         
         printf("Done in %i turns.\n", count);
         
