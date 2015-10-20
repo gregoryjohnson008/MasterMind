@@ -111,22 +111,32 @@ void getResponse(char* answer, char* guess, int* buff)
 // Returns true if the elem has the digits in the right position amount times
 // Ex: guess = 0123, if elem = 0156 and amount = 2 returns true
 //                   if elem = 0156 and amount = 3 returns false
-bool charNWithinForA(char* guess, string elem, int amount)
+bool charWithinForAWithB(char* guess, string elem, int amountA, int amountB)
 {
     for(int i = 0; i < 4; i++)
     {
         if(elem[i] == guess[i])
         {
-            amount--;
+            amountA--;
+        }
+        else
+        {
+            for(int j = 0; j < 4; j++) //Will delete if there are not exactly B out of place
+            {
+                if(elem[i] == guess[j])
+                {
+                    amountB--;
+                }
+            }
         }
     }
-    return amount <= 0;
+    return (amountA == 0 && amountB == 0);
 }
 // Expects valid input (non-null elem that contains a terminating character)
 // Returns true if there is a corresponding character
 // Ex: guess = 0123, if elem = 0156 returns true
 //                   if elem = 5678 returns false
-bool charInACorrPos(char* guess, string elem)
+bool charInACorrPosWithB(char* guess, string elem, int amountB)
 {
     for(int i = 0; i < 4; i++)
     {
@@ -134,30 +144,48 @@ bool charInACorrPos(char* guess, string elem)
         {
             return true;
         }
+        else
+        {
+            for(int j = 0; j < 4; j++) //Will delete if there are not exactly B out of place
+            {
+                if(elem[i] == guess[j])
+                {
+                    amountB--;
+                }
+            }
+        }
     }
-    return false;
+    return amountB != 0;
 }
 
-/*  Called when the A value is greater than 0.
- *  1) Removes the numbers in the array that does not have any of the guess digits in a corresponding positions (Ex: guess = 1234, removes nums that don't have 1 in the first spot or 2 in the 2nd spot...)
- *  2) If A = 0 then delete all nums that have any of the digits in the corresponding position
+/*  Called to removes possible answers based on A and B
+ *  1) If A > 0:
+ *      1a) if B > 0: then delete nums that don't have A digits corresponding and another B digits from the guess
+ *      1b) if B = 0: then delete nums that don't have exactly A digits corresponding
+ *  2) If A = 0:
+ *      2a) if B > 0: then delete all nums that have any of the digits in the corresponding position and don't have B of the digits
+ *      2b) if B = 0: then delete all nums that have any of the digits
+ *  Remove the guess
  */
-void removeBasedOnA(char* guess, int A)
+void removeBasedOnResponse(char* guess, int A, int B)
 {
+    int removed = 0;
     // 1)
     if(A > 0)
     {
         for(int i = 0; i < posAnswers.size(); i++)
         {
-            if(!charNWithinForA(guess, posAnswers[i], A)) //Remove if does not have any of the numbers
+            if(!charWithinForAWithB(guess, posAnswers[i], A, B)) // 1a) and 1b)
             {
                 posAnswers.erase(posAnswers.begin()+i);
                 i--;
+                removed++;
             }
             else if(guess[0] == posAnswers[i][0] && guess[1] == posAnswers[i][1] && guess[2] == posAnswers[i][2] && guess[3] == posAnswers[i][3]) //Remove the guess
             {
                 posAnswers.erase(posAnswers.begin()+i);
                 i--;
+                removed++;
             }
             
         }
@@ -166,34 +194,45 @@ void removeBasedOnA(char* guess, int A)
     {
         for(int i = 0; i < posAnswers.size(); i++)
         {
-            if(charInACorrPos(guess, posAnswers[i])) //Remove if a character corresponds
+            if(charInACorrPosWithB(guess, posAnswers[i], B)) // 2a) and 2b)
             {
                 posAnswers.erase(posAnswers.begin()+i);
                 i--;
+                removed++;
             }
             else if(guess[0] == posAnswers[i][0] && guess[1] == posAnswers[i][1] && guess[2] == posAnswers[i][2] && guess[3] == posAnswers[i][3]) //Remove the guess
             {
                 posAnswers.erase(posAnswers.begin()+i);
                 i--;
+                removed++;
             }
             
         }
     }
+    printf("Removed: %i\n", removed);
 }
 
+//Randomly retrieves next guess
+void getNewGuess(char* guess)
+{
+    int getIndex = rand() % posAnswers.size();
+    
+    guess[0] = posAnswers[getIndex][0];
+    guess[1] = posAnswers[getIndex][1];
+    guess[2] = posAnswers[getIndex][2];
+    guess[3] = posAnswers[getIndex][3];
+    guess[4] = '\0';
+}
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 	char answer[5];     //stores the actual answer
 	answer[4] = '\0';
 	
 	char guess[5];      //stores the guess
 	guess[4] = '\0';
-	strncpy(guess, "0123", 4);
 	
     int buff[2];        //stores the A and B after guess is made
-    buff[0] = 0;
-    buff[1] = 1;
     
     populatePossibilities(); //fills array of possible answers
     
@@ -215,18 +254,20 @@ int main(int argc, char *argv[])
         int count = 0;
         do
         {
+            //***********Gets new guess***********
+            getNewGuess(guess);
             printf("answer: %s\n", answer);
             printf("guess: \t%s\n", guess);
+            
+            //***********Gets response***********
             getResponse(answer, guess, buff);
             printf("%iA %iB\n", buff[0], buff[1]);
-            removeBasedOnA(guess, buff[0]);
+            
+            //***********Removes from possible answers***********
+            removeBasedOnResponse(guess, buff[0], buff[1]);
             printAnswers();
-            guess[0] = posAnswers[0][0];
-            guess[1] = posAnswers[0][1];
-            guess[2] = posAnswers[0][2];
-            guess[3] = posAnswers[0][3];
-            guess[4] = '\0';
-        }while(buff[0] != 4 && ++count < 150);
+        }
+        while(buff[0] != 4 && ++count < 150);
         
         printf("Done in %i turns.\n", count);
         
