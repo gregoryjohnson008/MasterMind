@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
             removeBasedOnResponse(guess, buff[0], buff[1]);
             //printAnswers();
         }
-        while(count++ < 150);
+        while(count++ < 150); //No one wants an infinite loop
         
         printf("Done in %i turns.\n", count);
         
