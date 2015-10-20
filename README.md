@@ -1,6 +1,7 @@
 # README #
 
 To Run On:
+
 	Mac - 	1) Navigate to the project folder through the terminal
             2) Run executable by typing: ./MasterMind [answer]
 
